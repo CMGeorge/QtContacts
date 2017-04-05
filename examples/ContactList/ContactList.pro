@@ -55,3 +55,8 @@ HEADERS += \
     QMAKE_MAC_XCODE_SETTINGS=team
     signing.name=CODE_SIGN_IDENTITY
     signing.value="iPhone Developer"
+
+winrt{
+#    QMAKE_CXXFLAGS += /ZW
+#    QMAKE_CXXFLAGS += /AI 'C:\Program Files \(x86)\Microsoft Visual Studio 14.0\VC\lib\store\references'
+}
