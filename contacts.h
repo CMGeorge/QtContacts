@@ -11,10 +11,11 @@ public:
     explicit Contacts(QObject *parent = 0);
     QList<ContactModel*> getContacts();
 private:
-    QList<ContactModel*> contactsList;
+    QList<ContactModel*> m_contactsList;
 signals:
     void contactsRetrieved(QList<ContactModel*>);
 public slots:
+    void nativeDataRetrieveCompleteWithList(QList<ContactModel*>);
 };
 
 

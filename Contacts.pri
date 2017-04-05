@@ -5,6 +5,8 @@ HEADERS += \
     $$PWD/contactmodel.h
 
 ios{
+    LIBS += -framework Foundation -framework Contacts
+    OBJECTIVE_SOURCES += $$PWD/ios/contacts.mm
 }else:android{
     QT += androidextras
     SOURCES +=  \
@@ -17,12 +19,13 @@ ios{
     DISTFILES += $$PWD/android/Java/ContactsManager.java
 
 }else:winrt{
+}else{
+    SOURCES += $$PWD/desktop/contacts.cpp
 }
 OTHER_FILES += \
         $$PWD/README.md \
         $$files($$PWD/android/src/net/reea/*)
-warning($$QCALENDAR_JAVASRC.files);
 
 SOURCES += \
     $$PWD/contactmodel.cpp \
-    $$PWD/desktop/contacts.cpp
+

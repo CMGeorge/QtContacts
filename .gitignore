@@ -1,0 +1,4 @@
+examples/build-ContactList-Desktop_Qt_5_8_0_clang_64bit-Debug
+examples/build-ContactList-iphonesimulator_clang_Qt_5_8_0_for_iOS-Debug
+examples/build-ContactList-iphoneos_clang_Qt_5_8_0_for_iOS-Debug
+examples/build-ContactList-iphoneos_clang_Qt_5_8_0_for_iOS-Release
