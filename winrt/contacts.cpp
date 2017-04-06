@@ -31,15 +31,43 @@ using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace concurrency;
 
+class MyContacts :public IContact, public IContact2, IContact3 {
+public:
+	MyContacts() {}
+	QString getFullName() {
+		HSTRING clientName;
+		get_Name(&clientName);
+		return QString::fromStdWString(WindowsGetStringRawBuffer(clientName, nullptr));
+	}
+	QStringList getPhoneNumbers() {
+		QStringList phoneNumbers;
+		IVector<ContactPhone*> *contactPhones;
+		unsigned int phonesCount;
+		get_Phones(&contactPhones);
+		contactPhones->get_Size(&phonesCount);
+		qDebug() << "Phones Numbers " << phonesCount;
+		HSTRING phoneNumber = 0x0;
+		for (int i = 0; i < phonesCount; i++) {
+			IContactPhone *_cp;
+			contactPhones->GetAt(i, &_cp);
+			_cp->get_Number(&phoneNumber);
+			phoneNumbers<< QString::fromStdWString(WindowsGetStringRawBuffer(phoneNumber, nullptr));
+		}
+		return phoneNumbers;
+	}
+};
 Contacts::Contacts(QObject *parent) : QObject(parent){
+
     qDebug()<<"Is WINRT Contact";
-    ComPtr<IContactManagerStatics2> contactManager;
+
+    ComPtr<IContactManagerStatics3> contactManager;
     HRESULT hr = GetActivationFactory(HStringReference(L"Windows.ApplicationModel.Contacts.ContactManager").Get(), &contactManager);
     if (FAILED(hr)){
         qDebug()<<"Failed to get ContactManaget Fabric";
     }
     IAsyncOperation<ContactStore*>* asyncOp;
-    hr = contactManager->RequestStoreAsync(&asyncOp);
+    //hr = contactManager->RequestStoreAsync(&asyncOp);
+	contactManager->RequestStoreAsyncWithAccessType(ContactStoreAccessType_AllContactsReadOnly, &asyncOp);
     if (FAILED(hr)){
         qDebug()<<"Failed to get ContactManaget Fabric";
     }
@@ -62,18 +90,18 @@ Contacts::Contacts(QObject *parent) : QObject(parent){
     unsigned int contactsCount;
     contactListItems->get_Size(&contactsCount);
     qDebug() << "Contacts Sync Is: " << contactListItems << " With Length " << contactsCount;
-
-	for (int i = 0; i < contactsCount; i++) {
-		IContact *currentContact = 0x0;
-		contactListItems->GetAt(i, &currentContact);
-		HSTRING clientName;
-		currentContact->get_Name(&clientName);
-		QString contactName = QString::fromStdWString(WindowsGetStringRawBuffer(clientName, nullptr));
-        if (!contactName.isEmpty()) {
-			ContactModel *_cm = new ContactModel();
-            _cm->setFullName(contactName);
-			m_contactsList.append(_cm);
-		}
+	
+    for (unsigned int i = 0; i < contactsCount; i++) {
+	//for (IContact currentContact: contactListItems){
+		IContact *currentContact2 = 0x0;
+        contactListItems->GetAt(i, &currentContact2);
+		MyContacts *currentContact = reinterpret_cast<MyContacts*>(currentContact2);
+        if (currentContact->getPhoneNumbers().count()>0) {
+            ContactModel *_cm = new ContactModel();
+            _cm->setFullName(currentContact->getFullName());
+			_cm->setPhoneNumber(currentContact->getPhoneNumbers().at(0));
+            m_contactsList.append(_cm);
+        }
     }
 }
 QList<ContactModel*> Contacts::getContacts(){
