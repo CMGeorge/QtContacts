@@ -19,6 +19,7 @@ ios{
     DISTFILES += $$PWD/android/Java/ContactsManager.java
 
 }else:winrt{
+    SOURCES += $$PWD/winrt/contacts.cpp
 }else{
     SOURCES += $$PWD/desktop/contacts.cpp
 }

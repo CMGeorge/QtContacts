@@ -4,7 +4,9 @@
 ContactsListModel::ContactsListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+	qRegisterMetaType<QList<ContactModel*>>("ContactsModelList");
     Contacts *contacts = new Contacts(this);
+	connect(contacts,SIGNAL(contactsRetrieved(QList<ContactModel*>)),this,SLOT(contactListRetrieveComplete(QList<ContactModel*>)));
     m_contactList = contacts->getContacts();
     qDebug()<<"We should have "<<m_contactList.count();
 }
@@ -16,19 +18,15 @@ int ContactsListModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    qDebug()<<"Row Count "<<m_contactList.count();
     // FIXME: Implement me!
     return m_contactList.count();
 }
 
 QVariant ContactsListModel::data(const QModelIndex &index, int role) const
 {
-    qDebug()<<"Getting data";
     if (!index.isValid())
         return QVariant();
 
-    // FIXME: Implement me!
-    qDebug()<<"Requesting role "<<role;
     ContactModel *contactModel = m_contactList.at(index.row());
     QVariant returnValue;
     switch (role) {
@@ -83,6 +81,11 @@ QHash<int, QByteArray> ContactsListModel::roleNames() const {
     return roles;
 }
 
-void ContactsListModel::contactListRetrieveComplete(QList<ContactModel*>){
-
+void ContactsListModel::contactListRetrieveComplete(QList<ContactModel*>newContacts){
+	//beginInsertColumns(QModelIndex(), 0, newContacts.count() - 1);
+	beginInsertRows(QModelIndex(), 0, newContacts.count() - 1);
+	qDebug() << "Update model";
+	m_contactList.clear();
+	m_contactList = newContacts;
+	endInsertRows();
 }

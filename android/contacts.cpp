@@ -24,11 +24,16 @@ Contacts::Contacts(QObject *parent) : QObject(parent)
             ContactModel *contactModel = new ContactModel(this);
             contactModel->setFullName(contactItem.value("name").toString());
             contactModel->setPhoneNumber(contactItem.value("phoneNumber").toString());
-            contactsList.append(contactModel);
+            m_contactsList.append(contactModel);
         }
     }
-    emit contactsRetrieved(contactsList);
+    nativeDataRetrieveCompleteWithList(m_contactsList);
+
 }
 QList<ContactModel*> Contacts::getContacts(){
-    return contactsList;
+    return m_contactsList;
+}
+void Contacts::nativeDataRetrieveCompleteWithList(QList<ContactModel*> contactsList){
+    m_contactsList = contactsList;
+    emit contactsRetrieved(m_contactsList);
 }
