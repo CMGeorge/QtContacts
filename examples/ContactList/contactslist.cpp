@@ -4,7 +4,7 @@
 ContactsListModel::ContactsListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-	qRegisterMetaType<QList<ContactModel*>>("ContactModel");
+	qRegisterMetaType<QList<ContactModel*>>("ContactsModelList");
     Contacts *contacts = new Contacts(this);
 	connect(contacts,SIGNAL(contactsRetrieved(QList<ContactModel*>)),this,SLOT(contactListRetrieveComplete(QList<ContactModel*>)));
     m_contactList = contacts->getContacts();
