@@ -26,7 +26,7 @@ using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::ApplicationModel::Contacts;
 using namespace ABI::Windows::Networking::PushNotifications;
-
+using namespace ABI::Windows::Storage::Streams;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace concurrency;
@@ -54,6 +54,16 @@ public:
 			phoneNumbers<< QString::fromStdWString(WindowsGetStringRawBuffer(phoneNumber, nullptr));
 		}
 		return phoneNumbers;
+	}
+	void getUserImage() {
+		IRandomAccessStreamReference *streamReference;
+		get_Thumbnail(&streamReference);
+		if (streamReference != nullptr) {
+			ComPtr<IAsyncOperation<IRandomAccessStreamWithContentType*>> openReadAsync;
+			streamReference->OpenReadAsync(&openReadAsync);
+			qDebug() << getFullName() << " has image ";
+		}
+
 	}
 };
 Contacts::Contacts(QObject *parent) : QObject(parent){
@@ -129,6 +139,7 @@ Contacts::Contacts(QObject *parent) : QObject(parent){
 					ContactModel *_cm = new ContactModel();
 					_cm->setFullName(currentContact->getFullName());
 					_cm->setPhoneNumber(currentContact->getPhoneNumbers().at(0));
+					currentContact->getUserImage();
 					newData.append(_cm);
 				}
 			}
