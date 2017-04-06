@@ -16,19 +16,15 @@ int ContactsListModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    qDebug()<<"Row Count "<<m_contactList.count();
     // FIXME: Implement me!
     return m_contactList.count();
 }
 
 QVariant ContactsListModel::data(const QModelIndex &index, int role) const
 {
-    qDebug()<<"Getting data";
     if (!index.isValid())
         return QVariant();
 
-    // FIXME: Implement me!
-    qDebug()<<"Requesting role "<<role;
     ContactModel *contactModel = m_contactList.at(index.row());
     QVariant returnValue;
     switch (role) {

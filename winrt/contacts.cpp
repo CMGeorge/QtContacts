@@ -45,9 +45,9 @@ public:
 		unsigned int phonesCount;
 		get_Phones(&contactPhones);
 		contactPhones->get_Size(&phonesCount);
-		qDebug() << "Phones Numbers " << phonesCount;
+		//qDebug() << "Phones Numbers " << phonesCount;
 		HSTRING phoneNumber = 0x0;
-		for (int i = 0; i < phonesCount; i++) {
+		for (unsigned int i = 0; i < phonesCount; i++) {
 			IContactPhone *_cp;
 			contactPhones->GetAt(i, &_cp);
 			_cp->get_Number(&phoneNumber);
@@ -65,49 +65,113 @@ Contacts::Contacts(QObject *parent) : QObject(parent){
     if (FAILED(hr)){
         qDebug()<<"Failed to get ContactManaget Fabric";
     }
-    IAsyncOperation<ContactStore*>* asyncOp;
+    ComPtr<IAsyncOperation<ContactStore*>> asyncOp;
     //hr = contactManager->RequestStoreAsync(&asyncOp);
 	contactManager->RequestStoreAsyncWithAccessType(ContactStoreAccessType_AllContactsReadOnly, &asyncOp);
     if (FAILED(hr)){
         qDebug()<<"Failed to get ContactManaget Fabric";
     }
 
+
+	auto onAppLicCompletedCallback = Callback<Implements<RuntimeClassFlags<ClassicCom>, IAsyncOperationCompletedHandler<ContactStore*>, FtmBase>>(
+		[this](IAsyncOperation<ContactStore*>* operation, AsyncStatus status)
+	{
+		qDebug() << "On Callback";
+//		Started = 0,
+//			Completed,
+//			Canceled,
+//			Error,
+		if (status == AsyncStatus::Started){
+			qDebug() << "Operation Started";
+		}
+		else if (status == AsyncStatus::Completed) {
+			qDebug() << "Operation complete";
+			IContactStore *contactStore = 0x0;
+			operation->GetResults(&contactStore);
+			qDebug() << "Contact Store is: " << contactStore;
+
+
+			IAsyncOperation<IVectorView<Contact*>*> *contactAsync;
+			HRESULT hr = contactStore->FindContactsAsync(&contactAsync);
+			if (FAILED(hr)) {
+				qDebug() << "Failed to get IAsyncOperation<IVectorView<Contact*>*> *contactAsync;";
+			}
+//			auto onFindContactsAsyncDone = Callback<Implements<RuntimeClassFlags<ClassicCom>, IAsyncOperationCompletedHandler<IVectorView<Contact*>*>, FtmBase>>(
+//				[](IAsyncOperation<IVectorView<Contact*>*> *operation, AsyncStatus status)
+//			{
+//				qDebug() << "On FindContactsAsync Callback";
+//				if (status == AsyncStatus::Started) {
+//					qDebug() << "Operation Started";
+//				}
+//				else if (status == AsyncStatus::Completed) {
+
+//				}
+//				return S_OK;
+//			});
+//			//contactAsync->put_Completed()
+//			contactAsync->put_Completed(onFindContactsAsyncDone);
+
+			IVectorView<Contact*> *contactListItems = 0x0;
+			while (contactListItems == 0x0) {
+				contactAsync->GetResults(&contactListItems);
+			}
+			unsigned int contactsCount;
+			contactListItems->get_Size(&contactsCount);
+			//qDebug() << "Contacts Sync Is: " << contactListItems << " With Length " << contactsCount;
+
+			QList<ContactModel*>newData;
+			for (unsigned int i = 0; i < contactsCount; i++) {
+				//for (IContact currentContact: contactListItems){
+				IContact *currentContact2 = 0x0;
+				contactListItems->GetAt(i, &currentContact2);
+				MyContacts *currentContact = reinterpret_cast<MyContacts*>(currentContact2);
+				if (currentContact->getPhoneNumbers().count()>0) {
+					qDebug() << ".";
+					ContactModel *_cm = new ContactModel();
+					_cm->setFullName(currentContact->getFullName());
+					_cm->setPhoneNumber(currentContact->getPhoneNumbers().at(0));
+					newData.append(_cm);
+				}
+			}
+			if (newData.count() > 0) {
+				nativeDataRetrieveCompleteWithList(newData);
+			}
+
+
+//			ComPtr<IAsyncOperation<IVectorView<Contact*>*>> contactAsync;
+//			//IAsyncOperation<Contact> me=
+//			HRESULT hr = contactStore->FindContactsAsync(&contactAsync);
+//			if (FAILED(hr)) {
+//				qDebug() << "Failed to get IAsyncOperation<IVectorView<Contact*>*> *contactAsync;";
+//			}
+
+			
+		}
+		//Asynchronous operation is done
+		//	if (status == completed)/
+		//	{
+		//		// use results from operation->GetResults() as needed...
+		//	}
+		return S_OK;
+	});
+
+	asyncOp->put_Completed(onAppLicCompletedCallback.Get());
+
     IContactStore *contactStore = 0x0;
     while (contactStore==0x0){
         asyncOp->GetResults(&contactStore);
     }
     qDebug()<<"Contact Store is: "<<contactStore;
-    IAsyncOperation<IVectorView<Contact*>*> *contactAsync;
-    //IAsyncOperation<Contact> me=
-    hr = contactStore->FindContactsAsync(&contactAsync);
-    if (FAILED(hr)) {
-        qDebug() << "Failed to get IAsyncOperation<IVectorView<Contact*>*> *contactAsync;";
-    }
-    IVectorView<Contact*> *contactListItems = 0x0;
-    while (contactListItems == 0x0) {
-        contactAsync->GetResults(&contactListItems);
-    }
-    unsigned int contactsCount;
-    contactListItems->get_Size(&contactsCount);
-    qDebug() << "Contacts Sync Is: " << contactListItems << " With Length " << contactsCount;
+    
 	
-    for (unsigned int i = 0; i < contactsCount; i++) {
-	//for (IContact currentContact: contactListItems){
-		IContact *currentContact2 = 0x0;
-        contactListItems->GetAt(i, &currentContact2);
-		MyContacts *currentContact = reinterpret_cast<MyContacts*>(currentContact2);
-        if (currentContact->getPhoneNumbers().count()>0) {
-            ContactModel *_cm = new ContactModel();
-            _cm->setFullName(currentContact->getFullName());
-			_cm->setPhoneNumber(currentContact->getPhoneNumbers().at(0));
-            m_contactsList.append(_cm);
-        }
-    }
 }
+
+//IAsyncOperationCompletedHandler<ContactStore*>*handler
 QList<ContactModel*> Contacts::getContacts(){
     return m_contactsList;
 }
 
-void Contacts::nativeDataRetrieveCompleteWithList(QList<ContactModel*>){
-
+void Contacts::nativeDataRetrieveCompleteWithList(QList<ContactModel*> contactsList){
+    m_contactsList = contactsList;
+    emit contactsRetrieved(m_contactsList);
 }
