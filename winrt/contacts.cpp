@@ -126,7 +126,6 @@ Contacts::Contacts(QObject *parent) : QObject(parent){
 				contactListItems->GetAt(i, &currentContact2);
 				MyContacts *currentContact = reinterpret_cast<MyContacts*>(currentContact2);
 				if (currentContact->getPhoneNumbers().count()>0) {
-					qDebug() << ".";
 					ContactModel *_cm = new ContactModel();
 					_cm->setFullName(currentContact->getFullName());
 					_cm->setPhoneNumber(currentContact->getPhoneNumbers().at(0));

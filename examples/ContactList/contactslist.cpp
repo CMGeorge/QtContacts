@@ -4,7 +4,9 @@
 ContactsListModel::ContactsListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+	qRegisterMetaType<QList<ContactModel*>>("ContactModel");
     Contacts *contacts = new Contacts(this);
+	connect(contacts,SIGNAL(contactsRetrieved(QList<ContactModel*>)),this,SLOT(contactListRetrieveComplete(QList<ContactModel*>)));
     m_contactList = contacts->getContacts();
     qDebug()<<"We should have "<<m_contactList.count();
 }
@@ -79,6 +81,11 @@ QHash<int, QByteArray> ContactsListModel::roleNames() const {
     return roles;
 }
 
-void ContactsListModel::contactListRetrieveComplete(QList<ContactModel*>){
-
+void ContactsListModel::contactListRetrieveComplete(QList<ContactModel*>newContacts){
+	//beginInsertColumns(QModelIndex(), 0, newContacts.count() - 1);
+	beginInsertRows(QModelIndex(), 0, newContacts.count() - 1);
+	qDebug() << "Update model";
+	m_contactList.clear();
+	m_contactList = newContacts;
+	endInsertRows();
 }
