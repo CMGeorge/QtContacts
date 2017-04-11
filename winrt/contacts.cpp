@@ -91,7 +91,10 @@ Contacts::Contacts(QObject *parent) : QObject(parent){
 //			Completed,
 //			Canceled,
 //			Error,
-		if (status == AsyncStatus::Started){
+        if (status == Error){
+            qDebug()<<"Error on loading list";
+            emit error();
+        }else if (status == AsyncStatus::Started){
 			qDebug() << "Operation Started";
 		}
 		else if (status == AsyncStatus::Completed) {
@@ -167,11 +170,11 @@ Contacts::Contacts(QObject *parent) : QObject(parent){
 
 	asyncOp->put_Completed(onAppLicCompletedCallback.Get());
 
-    IContactStore *contactStore = 0x0;
-    while (contactStore==0x0){
-        asyncOp->GetResults(&contactStore);
-    }
-    qDebug()<<"Contact Store is: "<<contactStore;
+//    IContactStore *contactStore = 0x0;
+//    while (contactStore==0x0){
+//        asyncOp->GetResults(&contactStore);
+//    }
+//    qDebug()<<"Contact Store is: "<<contactStore;
     
 	
 }
