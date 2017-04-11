@@ -1,4 +1,4 @@
-#include "Contacts.h"
+#include "contacts.h"
 #import "UIKit/UIKit.h"
 #import <Contacts/Contacts.h>
 #include <QDebug>
